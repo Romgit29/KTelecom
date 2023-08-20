@@ -1,0 +1,42 @@
+version: '3'
+services:
+  php:
+    image: bitnami/php-fpm:latest
+    container_name: ktelecom_php-fpm
+    hostname: ktelecom_php-fpm
+    working_dir: /var/www/ktelecom
+    depends_on:
+      - mysql
+    environment:
+      - "ENV_SUBSTITUTION_ENABLE=true"
+      - "PHP_MEMORY_LIMIT=512M"
+      - "PHP_FPM_LISTEN=9000"
+      - "PHP_SESSION_GC_MAXLIFETIME=7200"
+    volumes:
+      - ./ktelecom:/var/www/ktelecom:rw
+
+  nginx:
+    image: nginx:latest
+    container_name: ktelecom_nginx
+    hostname: ktelecom_nginx
+    ports:
+      - 8082:80
+    volumes:
+      - ./ktelecom:/var/www/ktelecom
+      - ./nginx/conf:/etc/nginx/conf.d
+      - ./nginx/logs:/var/log/nginx/
+    depends_on:
+      - php
+      
+  mysql:
+    image: mysql:latest
+    container_name: ktelecom_mysql
+    hostname: ktelecom_mysql
+    ports:
+      - "5051:3306"
+    volumes:
+      - ./mysql/mysqldata:/var/lib/mysql:rw
+      - ./mysql/conf/my.cnf:/etc/mysql/my.cnf:rw
+    environment:
+      MYSQL_DATABASE: ktelecom
+      MYSQL_ROOT_PASSWORD: mysql_root_password
