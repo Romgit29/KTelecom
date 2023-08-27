@@ -34,5 +34,8 @@ class UpdateEquipmentRequest extends FormRequest
     protected function failedValidation(Validator $validator)
     {
         $this->errors = $validator->errors()->toArray();
+        $unnestedErrors = [];
+        getRidOfNestsed($this->errors, $unnestedErrors);
+        $this->errors = $unnestedErrors;
     }
 }

@@ -35,18 +35,16 @@ class StoreEquipmentRequest extends FormRequest
 
     protected function failedValidation(Validator $validator)
     {
-        foreach( request()->all() as $key=>$value ) {
+        foreach (request()->all() as $key => $value) {
             $errors = [];
-            
-            foreach($validator->errors()->toArray() as $errorKey => $error) {
-                if( str_starts_with($errorKey, $key) ) array_push( $errors, $error );
+            foreach ($validator->errors()->toArray() as $errorKey => $error) {
+                if (str_starts_with($errorKey, $key)) array_push($errors, $error);
             }
-            
-            if( count($errors) > 0 ) array_push($this->errors, [
-                'data' => $value, 
+            if (count($errors) > 0) array_push($this->errors, [
+                'requestFieldNumber' => $key,
                 'errors' => $errors
             ]);
-            else array_push($this->passed, $value);
+            else $this->passed[$key] = $value;
         }
     }
 }

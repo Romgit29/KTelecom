@@ -2,13 +2,12 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Equipment;
-use App\Models\EquipmentType;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class EquipmentCollection extends ResourceCollection
 {
+    public $preserveKeys = true;
     /**
      * Transform the resource collection into an array.
      *
@@ -16,8 +15,6 @@ class EquipmentCollection extends ResourceCollection
      */
     public function toArray(Request $request): array
     {
-        return [
-            $this->collection,
-        ];
+        return $this->collection->toArray();
     }
 }
