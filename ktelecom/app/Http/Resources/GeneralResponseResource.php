@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Resources\Json\ResourceCollection;
 
 class GeneralResponseResource extends JsonResource
 {
@@ -16,7 +17,7 @@ class GeneralResponseResource extends JsonResource
     {
         $array = parent::toArray($request);
         $validation = $this->validateParameters($array['success'], $array['errors']);
-        if ($validation['success'] !== true) return [
+        if (!$validation['success']) return [
             'success' => [],
             'errors' => $validation['errors'],
         ];
@@ -30,7 +31,7 @@ class GeneralResponseResource extends JsonResource
     public function validateParameters($success, $errors)
     {
         if (!(gettype($success) == 'array' && count($success) == 0)) {
-            if (gettype($success) !== 'object' || !(gettype($success) == 'object' && (get_parent_class(get_class($success)) == 'Illuminate\Http\Resources\Json\JsonResource' || get_parent_class(get_class($success)) == 'Illuminate\Http\Resources\Json\ResourceCollection'))) {
+            if (gettype($success) !== 'object' || !(in_array(get_parent_class(get_class($success)), [JsonResource::class, ResourceCollection::class]))) {
                 return [
                     'success' => false,
                     'errors' => ["'success' property in GeneralResponseResource return has inappropriate type"]

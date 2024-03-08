@@ -11,22 +11,19 @@ interface EquipmentServiceInterface
 {
     /**
      * @param array $data
-     * @param MaskValidationService $maskValidationService
      * @return array
      */
-    public function storeEquipment(array $data, MaskValidationService $maskValidationService): array;
+    public function storeEquipment(array $data): array;
 
     /**
      * @param array $data
      * @param int $id
-     * @param MaskValidationService $maskValidationService
      * @return array
      */
-    public function updateEquipment(array $data, int $id, MaskValidationService $maskValidationService): array;
+    public function updateEquipment(array $data, int $id): array;
 
     /**
      * @param int $id
-     * @param MaskValidationService $maskValidationService
      * @return array
      */
     public function deleteEquipment(int $id): array;

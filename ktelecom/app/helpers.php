@@ -18,7 +18,7 @@ function getError($data)
     ]);
 }
 
-function getRidOfNestsed(array &$input, array &$output)
+function getRidOfNestsed(array &$input, &$output = []): void
 {
     foreach ($input as $value) {
         if (gettype($value) == 'array') {
@@ -27,4 +27,5 @@ function getRidOfNestsed(array &$input, array &$output)
             array_push($output, $value);
         }
     }
+    $input = $output;
 }

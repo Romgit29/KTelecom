@@ -26,7 +26,7 @@ class StoreEquipmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            '*' => 'array',
+            '*' => 'required|array|min:1',
             '*.equipment_type_id' => 'required|integer|exists:equipment_types,id',
             '*.serial_number' => 'required|max:100',
             '*.comment' => 'required|max:100'
@@ -40,11 +40,12 @@ class StoreEquipmentRequest extends FormRequest
             foreach ($validator->errors()->toArray() as $errorKey => $error) {
                 if (str_starts_with($errorKey, $key)) array_push($errors, $error);
             }
-            if (count($errors) > 0) array_push($this->errors, [
-                'requestFieldNumber' => $key,
-                'errors' => $errors
-            ]);
-            else $this->passed[$key] = $value;
+            if (count($errors) > 0) {
+                array_push($this->errors, [
+                    'requestFieldNumber' => $key,
+                    'errors' => $errors
+                ]);
+            } else $this->passed[$key] = $value;
         }
     }
 }

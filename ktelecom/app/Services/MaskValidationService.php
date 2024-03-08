@@ -2,9 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Equipment;
-use App\Models\EquipmentType;
-
 class MaskValidationService
 {
     public $rulesDict = [
@@ -37,26 +34,5 @@ class MaskValidationService
         } else {
             return false;
         }
-    }
-
-    public function getValidationParameters($data, $id)
-    {
-        $equipmentData = Equipment::where('equipment.id', $id)
-            ->join('equipment_types', 'equipment_types.id', 'equipment.equipment_type_id')
-            ->select('equipment_types.serial_number_mask', 'equipment.serial_number')
-            ->first();
-
-        if (!array_key_exists('equipment_type_id', $data)) $equipmentMask = $equipmentData['serial_number_mask'];
-        else $equipmentMask = EquipmentType::where('id', $data['equipment_type_id'])
-            ->first()
-            ->serial_number_mask;
-
-        if (!array_key_exists('serial_number', $data)) $serialNumber = $equipmentData['serial_number'];
-        else $serialNumber = $data['serial_number'];
-        $serialNumber;
-        return [
-            'equipmentMask' => $equipmentMask,
-            'serialNumber' => $serialNumber,
-        ];
     }
 }

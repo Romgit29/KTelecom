@@ -18,18 +18,18 @@ use App\Services\MaskValidationService;
 class EquipmentController extends Controller
 {
 
-    public function __construct(public EquipmentService $equipmentService)
+    private $equipmentService;
+
+    public function __construct(EquipmentService $equipmentService)
     {
+        $this->equipmentService = $equipmentService;
     }
 
-    public function store(StoreEquipmentRequest $request, MaskValidationService $maskValidationService)
+    public function store(StoreEquipmentRequest $request)
     {
         $requestArray = $request->all();
-        if (count($request->all()) === 0) {
-            return getError(['Request array is empty']);
-        }
         count($request->errors) === 0 ? $validatedArray = $requestArray : $validatedArray = $request->passed;
-        $result = $this->equipmentService->storeEquipment($validatedArray, $maskValidationService);
+        $result = $this->equipmentService->storeEquipment($validatedArray);
         $ids = $result['insertedDataIds'];
         $collection = new EquipmentCollection(
             Equipment::whereIn('id', $ids)->get()->mapWithKeys(function ($value) use ($ids) {
@@ -45,21 +45,21 @@ class EquipmentController extends Controller
         ]);
     }
 
-    public function update(UpdateEquipmentRequest $request, MaskValidationService $maskValidationService, $id)
+    public function update(UpdateEquipmentRequest $request, $id)
     {
         if (!filter_var($id, FILTER_VALIDATE_INT, array("options" => array("min_range" => 1)))) {
             return getError(['ID must be of type integer']);
         }
-        if (Equipment::where('id', $id)->first() === null) {
+        if (!Equipment::where('id', $id)->exists()) {
             return getError(['Record with such ID does not exists']);
         }
-        if (count($request->all()) === 0) {
+        if (count($request->validated()) === 0) {
             return getError(['Request array is empty']);
         }
         if (count($request->errors) !== 0) {
             return getError($request->errors);
         }
-        $result = $this->equipmentService->updateEquipment($request->only('serial_number', 'equipment_type_id', 'comment'), $id, $maskValidationService);
+        $result = $this->equipmentService->updateEquipment($request->validated(), $id);
         
         if ($result["success"] == true) {
             return getSuccess(new EquipmentResource($result["data"]));
@@ -73,7 +73,7 @@ class EquipmentController extends Controller
         if (!filter_var($id, FILTER_VALIDATE_INT, array("options" => array("min_range" => 1)))) {
             return getError(['ID must be of type integer']);
         }
-        if (Equipment::where('id', $id)->first() === null) {
+        if (!Equipment::where('id', $id)->exists()) {
             return getError(['Record with such ID does not exists']);
         }
         $result = $this->equipmentService->deleteEquipment($id);

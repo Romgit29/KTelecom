@@ -7,11 +7,19 @@ namespace App\Services;
 use App\Contracts\EquipmentServiceInterface;
 use App\Models\Equipment;
 use App\Models\EquipmentType;
+use Exception;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class EquipmentService implements EquipmentServiceInterface
 {
-    public function storeEquipment(array $data, MaskValidationService $maskValidationService): array
+    protected $maskValidationService;
+
+    public function __construct(MaskValidationService $maskValidationService)
+    {
+        $this->maskValidationService = $maskValidationService;
+    }
+    
+    public function storeEquipment(array $data): array
     {
         $insertedDataIds = [];
         $failedInsertions = [];
@@ -23,14 +31,14 @@ class EquipmentService implements EquipmentServiceInterface
                     ->first()
                     ->serial_number_mask;
 
-                if (!$maskValidationService->maskMatch($value['serial_number'], $equipmentTypeMask)) {
+                if (!$this->maskValidationService->maskMatch($value['serial_number'], $equipmentTypeMask)) {
                     array_push($failedInsertions, [
                         'requestFieldNumber' => $key,
                         'errors' => ["Serial number {$value['serial_number']} doesn't match equipment type mask"]
                     ]);
                     continue;
                 }
-
+                $this->checkRecordExistance($value['serial_number'], $value['equipment_type_id']);
                 $id = Equipment::insertGetId([
                     'equipment_type_id' => $value['equipment_type_id'],
                     'serial_number' => $value['serial_number'],
@@ -53,18 +61,26 @@ class EquipmentService implements EquipmentServiceInterface
         ];
     }
 
-    public function updateEquipment(array $data, int $id, MaskValidationService $maskValidationService): array
+    public function updateEquipment(array $data, int $id): array
     {
         try {
-            if (array_key_exists('serial_number', $data) || array_key_exists('equipment_type_id', $data)) {
-                $maskValidationParameters = $maskValidationService->getValidationParameters($data, $id);
-                if (!$maskValidationService->maskMatch($maskValidationParameters['serialNumber'], $maskValidationParameters['equipmentMask'])) return [
-                    'success' => false,
-                    'error' => ["Serial number {$maskValidationParameters['serialNumber']} doesn't match given or existing serial number mask"]
-                ];
+            $equipment = Equipment::find($id);
+            if(isset($data['equipment_type_id'])) {
+                $equipmentTypeId = $data['equipment_type_id'];
+            } else {
+                $equipmentTypeId = $equipment->equipment_type_id;
             }
+            if(isset($data['serial_number'])) {
+                $serialNumber = $data['serial_number'];
+            } else {
+                $serialNumber = $equipment->serial_number;
+            }
+            $equipmentMask = EquipmentType::find($equipmentTypeId)->serial_number_mask;
+            if (!$this->maskValidationService->maskMatch($serialNumber, $equipmentMask)) throw new Exception("Serial number $serialNumber doesn't match given or existing serial number mask");
+            $this->checkRecordExistance($serialNumber, $equipmentMask);
             Equipment::where('id', $id)
-                ->update($data);
+            ->update($data);
+            
         } catch (\Throwable $th) {
             return [
                 'success' => false,
@@ -132,5 +148,12 @@ class EquipmentService implements EquipmentServiceInterface
         else $query = $query->paginate(10);
 
         return $query;
+    }
+
+    private function checkRecordExistance(string $serialNumber, int $equipmentTypeId): void {
+        $existingRecord = Equipment::where('serial_number', $serialNumber)
+            ->where('equipment_type_id', $equipmentTypeId)
+            ->exists();
+        if($existingRecord) throw new Exception('Record with such serial number and equipment type allready exists');
     }
 }

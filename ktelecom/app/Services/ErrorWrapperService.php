@@ -30,9 +30,7 @@ class ErrorWrapperService
             $resultAray["input_$number"] = $errors;
         }
         foreach ($resultAray as $key => $value) {
-            $unnested = [];
-            getRidOfNestsed($value, $unnested);
-            $resultAray[$key] = $unnested;
+            getRidOfNestsed($resultAray[$key]);
         }
         $this->errors = $resultAray;
     }
